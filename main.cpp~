@@ -1,0 +1,540 @@
+/*
+  CS 354 - Fall 2012
+  main.cpp
+
+  This is simple skeleton GLUT code.
+*/
+
+// C++ library includes
+#include <cstdlib>
+#include <cmath>
+#include <iostream>
+#include <iomanip>
+#include <string>
+#include <sstream>
+#include <cstdio>
+#include <cstring>
+
+#include "./common.h"
+
+#include "./types.h"
+#include "./bvh_defs.h"
+#include "./joint.h"
+#include "./loader.h"
+#include "./geom.h"
+
+using namespace std;
+
+// window parameters
+int window_width = 800, window_height = 600;
+float window_aspect = window_width/static_cast<float>(window_height);
+
+// callback prototypes
+void InitGL();
+void Display();
+void Resize(int width, int height);
+void MouseButton(int button, int state, int x, int y);
+void MouseMotion(int x, int y);
+void Keyboard(unsigned char key, int x, int y);
+void Idle();
+
+SceneGraph sg;
+int frame = 0;
+
+int currButton;
+int currx, curry, oldx, oldy, deltax, deltay;
+
+#define PI 3.14159265f
+
+Vec3f eye, center, up;
+int waypoint = 1;
+float zoom = 1;
+int mytheta = 0;
+float Nphi = 36.0f, Ntheta = 36.0f, R;
+float theta = 0, phi = 0, deltaTheta = 0.1, deltaPhi = 0.1, deltaR = 1;
+float panx = 0.25, pany = 0.25;
+float zoomSpeed;
+bool animating = false;
+
+BoundingBox bbox = {{-100, -100, -100}, {100, 100, 100}};
+
+char filename[1000];
+
+bool showAxis = true;
+float axisLen = 1.0f;
+
+bool showBounds = false;
+
+void SetLighting();
+
+void InitGL() {
+  // Perform any necessary GL initialization in this function
+
+  // enable depth testing, and set clear color to white
+  glEnable(GL_DEPTH_TEST);
+  glDepthMask(GL_TRUE);
+  glDepthFunc(GL_LEQUAL);
+  glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+  SetLighting();
+
+  // resize the window
+  Resize(window_width, window_height);
+}
+
+void ComputeLookAt() {
+  float maxDist = (bbox.max-bbox.min).max();
+  center = (bbox.max+bbox.min)/2.0f;
+  up = Vec3f::makeVec(0.0f, 1.0f, 0.0f);
+  eye = center+Vec3f::makeVec(0.0f, 0.75f*maxDist, -1.5f*maxDist);
+  if (waypoint == 1) {
+    eye = center+zoom*Vec3f::makeVec(0.5f*maxDist, 0.75f*maxDist, 1.5f*maxDist);
+  } else if (waypoint == 2) {
+    eye = center+zoom*Vec3f::makeVec(0, 0.1f*maxDist, 1.5f*maxDist);
+  } else if (waypoint == 3) {
+    eye = center+zoom*Vec3f::makeVec(1.5f*maxDist, 0.1f*maxDist, 0);
+  }
+  R = (center-eye).norm();
+  zoomSpeed = maxDist*0.05f;
+  axisLen = maxDist*0.05f;
+}
+
+void SetLighting() {
+  glShadeModel(GL_FLAT);
+  glDisable(GL_LIGHTING);
+  glDisable(GL_LIGHT0);
+  glDisable(GL_COLOR_MATERIAL);
+}
+
+void SetCamera() {
+  gluLookAt(eye[0], eye[1], eye[2],
+            center[0], center[1], center[2],
+            up[0], up[1], up[2]);
+  glRotatef(mytheta, 0, 1, 0);
+}
+
+void SetProjection() {
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+
+  gluPerspective(40.0, window_aspect, 1, 1500);
+}
+
+void SetDrawMode() {
+  glPolygonMode(GL_FRONT, GL_FILL);
+  glPolygonMode(GL_BACK, GL_FILL);
+}
+
+void DrawAxis() {
+  Vec3f c = (bbox.min+bbox.max)*0.5f;
+  float L = (bbox.max-bbox.min).max() * 0.2;
+
+  Vec3f X = {L, 0, 0}, Y = {0, L, 0}, Z = {0, 0, L};
+
+  glLineWidth(2.0);
+
+  glBegin(GL_LINES);
+
+  glColor3f(1, 0, 0);
+  glVertex3fv(c.x);
+  glVertex3fv((c+X).x);
+
+  glColor3f(0, 1, 0);
+  glVertex3fv(c.x);
+  glVertex3fv((c+Y).x);
+
+  glColor3f(0, 0, 1);
+  glVertex3fv(c.x);
+  glVertex3fv((c+Z).x);
+
+  glEnd();
+}
+
+void DrawFloor(float W, float H, float w, float h) {
+  float a = H/h, b = W/w;
+  int M = static_cast<int>(floor(a+0.5f));
+  int N = static_cast<int>(floor(b+0.5f));
+  int i = 0, j = 0;
+  Vec3f u = {w, 0, 0}, v = {0, 0, h}, r = {-(N/2)*w, 0, -(M/2)*h};
+  Vec3f p0, p1, p2, p3;
+  glEnable(GL_POLYGON_SMOOTH);
+  glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
+  glBegin(GL_QUADS);
+  glColor3f(0.7, 0.7, 0.7);
+  for (j = 0; j < N; j++) {
+    p0 = r+u*static_cast<float>(j%2);
+    for (i = j%2; i < M; i += 2) {
+      p1 = p0+u;
+      p2 = p1+v;
+      p3 = p2-u;
+
+      glVertex3fv(p3.x);
+      glVertex3fv(p2.x);
+      glVertex3fv(p1.x);
+      glVertex3fv(p0.x);
+
+      p0 += u*2.0f;
+    }
+    r += v;
+  }
+  glEnd();
+}
+
+void DrawRect(const Vec3f & u, const Vec3f & v, const Vec3f & o) {
+  glBegin(GL_LINE_STRIP);
+  glColor3f(0, 0, 1);
+  glVertex3fv(o.x);
+  glVertex3fv((o+u).x);
+  glVertex3fv((o+u+v).x);
+  glVertex3fv((o+v).x);
+  glVertex3fv(o.x);
+  glEnd();
+}
+
+void DrawBounds() {
+  Vec3f u, v, m1[] = {bbox.min, bbox.max}, m2[] = {bbox.max, bbox.min};
+
+  for (int k = 0; k < 2; k++) {
+    for (int i = 0; i < 3; i++) {
+      for (int j = i+1; j < 3; j++) {
+        u = m1[k];
+        v = m1[k];
+        u.x[i] = m2[k].x[i];
+        v.x[j] = m2[k].x[j];
+        u = u-m1[k];
+        v = v-m1[k];
+        DrawRect(u, v, m1[k]);
+      }
+    }
+  }
+}
+
+void visit(int pid, int fid) {
+  Vec3f p = sg.get_point(pid);
+  Vec3f t = sg.get_translation(pid, fid);
+  Vec3f r = sg.get_rotation(pid, fid);
+  // if (t[0] != 0 || t[1] != 0 || t[2] != 0) {
+  //   cout << t << endl;
+  // }
+  glPushMatrix();
+  glTranslatef(p[0], p[1], p[2]);
+  glTranslatef(t[0], t[1], t[2]);
+  glRotatef(r[2], 0, 0, 1);
+  glRotatef(r[1], 0, 1, 0);
+  glRotatef(r[0], 1, 0, 0);
+  // glPushMatrix();
+  glutSolidCube(.4);
+  for (int i = 0; i < sg.num_children(pid); ++i) {
+    visit(sg.child(pid, i), fid);
+  }
+  glPopMatrix();
+}
+
+Vec3f visit2(int pid, int fid) {
+  Vec3f p = sg.get_point(pid);
+  Vec3f t = sg.get_translation(pid, fid);
+  Vec3f r = sg.get_rotation(pid, fid);
+  // if (t[0] != 0 || t[1] != 0 || t[2] != 0) {
+  //   cout << t << endl;
+  // }
+  glPushMatrix();
+  glTranslatef(p[0], p[1], p[2]);
+  glTranslatef(t[0], t[1], t[2]);
+  glRotatef(r[2], 0, 0, 1);
+  glRotatef(r[1], 0, 1, 0);
+  glRotatef(r[0], 1, 0, 0);
+  for (int i = 0; i < sg.num_children(pid); ++i) {
+    Vec3f c = visit2(sg.child(pid, i), fid);
+    glBegin(GL_LINES);
+    glVertex3f(0, 0, 0);
+    glVertex3f(c[0], c[1], c[2]);
+    glEnd();
+  }
+  glPopMatrix();
+
+  return p + t;
+}
+
+void Display() {
+  // clear last frame
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  SetProjection();
+
+  // load the identity matrix (we're in modelview mode)
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  SetLighting();
+  SetCamera();
+  SetDrawMode();
+  DrawFloor(800, 800, 80, 80);
+
+  // TODO: draw scene graph and animate
+  glPushMatrix();
+  glScalef(1, 1, 1);
+  glColor3f(1, 0, 0);
+  // cout << "num points = " << sg.num_points() << endl;
+  visit(0, frame);
+  visit2(0, frame);
+  glPopMatrix();
+
+  if (showAxis) DrawAxis();
+  if (showBounds) DrawBounds();
+
+  glFlush();          // finish the drawing commands
+  glutSwapBuffers();  // and update the screen
+
+  // if (animating) {
+  //   frame = (frame + 1) % sg.num_frames();
+  //   glutPostRedisplay();
+  // }
+}
+
+// This reshape function is called whenever the user
+// resizes the display window.
+void Resize(int width, int height) {
+  window_width = width;
+  window_height = height;
+  float fheight = static_cast<float>(height);
+  window_aspect = width / fheight;
+
+  // resize the window
+  glViewport(0, 0, window_width, window_height);
+
+  SetProjection();
+
+  // setup basic orthographic projection
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+
+  // let glut know to redraw the screen
+  glutPostRedisplay();
+}
+
+
+void setMousePos(int x, int y) {
+  currx = oldx = x;
+  curry = oldy = y;
+}
+
+void updateMousePos(int x, int y) {
+  oldx = currx;
+  currx = x;
+  deltax = currx-oldx;
+
+  oldy = curry;
+  curry = y;
+  deltay = curry-oldy;
+}
+
+// This function is called whenever the user presses
+// or releases a mouse button.
+//
+// The button variable can be tested equal to GLUT_LEFT_BUTTON,
+// GLUT_MIDDLE_BUTTON, and GLUT_RIGHT_BUTTON, which are self-
+// explanatory.
+//
+// The state variable is either GLUT_UP or GLUT_DOWN, also self-
+// explanatory.
+//
+// The x and y variables are the mouse's location in window coordinates.
+void MouseButton(int button, int state, int x, int y) {
+  y = window_height - y;
+
+  currButton = button;
+  setMousePos(x, y);
+  // YOUR CODE HERE
+
+  // let glut know to redraw the screen
+  glutPostRedisplay();
+}
+
+// This function is called whenever the user moves the mouse with
+// a button down.  x and y represent the mouse's new location.
+void MouseMotion(int x, int y) {
+  y = window_height - y;
+
+  updateMousePos(x, y);
+
+  Vec3f u, e, c, v, d;
+  float sgnx = (deltax == 0 ? 0 : deltax/fabs(deltax));
+  float sgny=(deltay == 0 ? 0 : deltay/fabs(deltay));
+  float tmp;
+  switch (currButton) {
+    case GLUT_LEFT_BUTTON:
+      tmp = phi-sgny*deltaPhi;
+      if (tmp<PI/2.0f-0.1&&tmp>-PI/2.0f+0.1) phi=tmp;
+
+      theta -= sgnx*deltaTheta;
+
+      if (theta > 2.0f*PI) theta=2.0f*PI-theta;
+      if (theta < -2.0f*PI) theta=4.0f*PI+theta;
+
+      d = Vec3f::makeVec(cos(phi)*sin(theta+PI), sin(phi),
+                         cos(phi)*cos(theta+PI));
+
+      eye = R*d+center;
+      up = Vec3f::makeVec(-sin(phi)*sin(theta+PI), cos(phi),
+                          -sin(phi)*cos(theta+PI));
+      break;
+    case GLUT_RIGHT_BUTTON:
+      R += sgny*deltaR*zoomSpeed;
+      if (R <= 0.5f) R = 0.5f;
+      eye = R*(eye-center).unit()+center;
+      break;
+    case GLUT_MIDDLE_BUTTON:
+      v = (up^(center-eye)).unit();
+      eye = eye - pany*sgny*up + panx*sgnx*v;
+      center = center - pany*sgny*up + panx*sgnx*v;
+      break;
+  }
+
+  // let glut know to redraw the screen
+  glutPostRedisplay();
+}
+
+// This function is called whenever the user hits letters or numbers
+// on the keyboard.  The 'key' variable has the character the user hit,
+// and x and y tell where the mouse was when it was hit.
+void Keyboard(unsigned char key, int x, int y) {
+  y = window_height - y;
+
+  float sgn = 1.0f;
+  Vec3f v;
+
+  switch (key) {
+    case '1':
+      waypoint = 1;
+      mytheta = 0;
+      ComputeLookAt();
+      break;
+    case '2':
+      waypoint = 2;
+      mytheta = 0;
+      ComputeLookAt();
+      break;
+    case '3':
+      waypoint = 3;
+      mytheta = 0;
+      ComputeLookAt();
+      break;
+    case 'z':
+      // TODO
+      cout << "Zoom in" << endl;
+      zoom *= 0.95;
+      ComputeLookAt();
+      break;
+    case 'Z':
+      // TODO
+      cout << "Zoom out" << endl;
+      zoom *= 1.05;
+      ComputeLookAt();
+      break;
+    case 'j':
+      // TODO
+      cout << "Orbit left" << endl;
+      mytheta = (mytheta+5)%360;
+      ComputeLookAt();
+      break;
+    case 'k':
+      // TODO
+      cout << "Orbit right" << endl;
+      mytheta = (mytheta-5)%360;
+      ComputeLookAt();
+      break;
+    case ' ':
+      // TODO
+      cout << "Start/stop animation" << endl;
+      animating = !animating;
+      break;
+    case 'a':
+      showAxis=!showAxis;
+      break;
+    case 'b':
+      showBounds=!showBounds;
+      break;
+    case 'n':
+      frame++;
+      break;
+    case 'p':
+      if (frame > 0) {
+        frame--;
+      }
+      break;
+    case 'q':
+    case 27:  // esc
+      exit(0);
+      break;
+  }
+
+  // let glut know to redraw the screen
+  glutPostRedisplay();
+}
+
+float last_time = 0;
+void Idle() {
+  float t = glutGet(GLUT_ELAPSED_TIME);
+  if (animating) {
+    if (t - last_time > sg.frame_time()) {
+      frame = (frame + 1) % sg.num_frames();
+      last_time = t;
+      glutPostRedisplay();
+    }
+  } else {
+    last_time = t;
+  }
+}
+
+void processCommandLine(int argc, char *argv[]) {
+  if (argc>1) {
+    snprintf(&(filename[0]), strlen(argv[1])+1, "%s", argv[1]);
+    BVHLoader::loadBVH(filename, &sg);
+    ComputeLookAt();
+  } else {
+    printf("Filename argument required.\n");
+    exit(0);
+  }
+}
+
+void showMenu() {
+  cout << "------------ menu ------------" << endl;
+  cout << "q - quit" << endl;
+  cout << "a - show/hide axis" << endl;
+  cout << "b - show/hide bounds" << endl;
+  cout << "[1-3] - move to waypoint" << endl;
+  cout << "z - zoom in" << endl;
+  cout << "Z - zoom out" << endl;
+  cout << "j - rotate left" << endl;
+  cout << "k - rotate right" << endl;
+  cout << "[SPACE] - start/stop" << endl;
+}
+
+int main(int argc, char *argv[]) {
+  // Initialize GLUT
+  glutInit(&argc, argv);
+  glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
+  glutInitWindowSize(window_width, window_height);
+  glutInitWindowPosition(100, 100);
+  // Do not change the name of the window -- it is needed for the screenshot
+  glutCreateWindow("Mocap");
+  glutDisplayFunc(Display);
+  glutReshapeFunc(Resize);
+  glutMouseFunc(MouseButton);
+  glutMotionFunc(MouseMotion);
+  glutKeyboardFunc(Keyboard);
+  glutIdleFunc(Idle);
+
+  processCommandLine(argc, argv);
+
+  showMenu();
+
+  InitGL();
+
+  // Set glut running
+  glutMainLoop();
+
+  return 0;
+}
