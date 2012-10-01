@@ -88,15 +88,24 @@ class Mat3 {
   Mat3 operator*(const Mat3& other) {
     Mat3 result;
 
+    // Will do this later
 
     return result;
   }
 
   // Other functions
   Mat3 transpose() {
+    short i = 0;
+    short i = j;
     Mat3 result;
-
+    while (i < 4) {
+      while ( j < 4) {
+	result[i][j] = mat[j][i];
+	j++;
+      }
+      i++;
+    }
     return result;
   }
-}
+};
 #endif
