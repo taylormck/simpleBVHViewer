@@ -22,18 +22,6 @@ class Mat3 {
     }
   }
 
-  Mat3(float[4][4] arr) {
-    short i = 0;
-    short j = 0;
-    while (i < 4) {
-      while (j < 4) {
-	mat[i][j] = arr[i][j];
-	j++;
-      }
-      i++;
-    }
-  }
-
   Mat3(Vector3 a, Vector3 b, Vector3 c, Point3 p){
     mat[0][0] = a.getX();
     mat[0][1] = a.getY();
@@ -59,9 +47,9 @@ class Mat3 {
   // Operators
   Mat3 operator+(const Mat3& other) {
     short i = 0;
-    short i = j;
     Mat3 result;
     while (i < 4) {
+      short j = 0;
       while ( j < 4) {
 	result[i][j] = mat[i][j] + other[i][j];
 	j++;
@@ -73,9 +61,9 @@ class Mat3 {
 
   Mat3 operator-(const Mat3& other) {
     short i = 0;
-    short i = j;
     Mat3 result;
     while (i < 4) {
+      short j = 0;
       while ( j < 4) {
 	result[i][j] = mat[i][j] - other[i][j];
 	j++;
@@ -87,10 +75,38 @@ class Mat3 {
 
   Mat3 operator*(const Mat3& other) {
     Mat3 result;
+    short i = 0;
 
-    // Will do this later
+    while (i < 4) {
+    short j = 0;
+      while (j < 4) {
+	short k = 0;
+	float value = 0;
+	while (k < 4) {
+	  value += mat[k][j] * mat[i][k];
+	  k++;
+	  }
+	result[i][j] = value;
+	j++;
+      }
+      i++;
+    }
 
     return result;
+  }
+
+  Point3 operator*(const Point3& other) {
+    float values[3];
+    short i =0;
+    while (i < 3) {
+      short j = 0;
+      values[i] = mat[i][0] * other.getX();
+      values[i] += mat[i][1] * other.getY();
+      values[i] += mat[i][2] * other.getZ();
+      i++;
+    }
+
+    return Vector3(values[0], values[1], values[2]);
   }
 
   // Other functions

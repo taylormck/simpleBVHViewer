@@ -60,7 +60,7 @@ class Vector3 {
 };
 
 static Vector3 operator*(float alpha, const Vector3& v) {
-  return Vector3(alpha * v.getX(), alpha * v.getY());
+  return Vector3(alpha * v.getX(), alpha * v.getY(), alpha * v.getZ());
 }
 
 #endif

@@ -58,7 +58,7 @@ $(OBJS): %.o: %.cpp
 	$(CC) -c $(CFLAGS) $(CPPFLAGS) $(INCLUDES) $< -o $@
 
 $(PROD):  $(OBJS)
-	./check-code main.cpp joint.h joint.cpp
+	./check-code main.cpp joint.h joint.cpp unit.cpp mat3.h vector3.h point3.h
 	$(CC) -o $(PROD) $^ $(LIBS)
 
 clean:
@@ -68,3 +68,6 @@ clean:
 	rm lex.yy.cpp
 	rm y.tab.h
 
+# My stuff
+unit:
+	g++ -o unit.cpp mat3.h point3.h vector3.h unit && ./unit
