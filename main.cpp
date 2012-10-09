@@ -210,14 +210,23 @@ void Display() {
 
   // TODO: draw scene graph and animate
 
-  {  // Test Code
-    glBegin(GL_LINES);
-    glVertex3f(0.0, 0.0, 0.0);
-    glVertex3f(0.0, 1.0, 0.0);
-    glPushMatrix();
-    glTranslatef(0.0, 1.0, 0.0);
-    glRotatef(90.0, 0.0, 0.0, 0.0);
-  }  // End Test Code
+  // Test Code
+  glLineWidth(2.0);
+  glColor3f(1, 0, 0);
+  glBegin(GL_LINES);
+  glVertex3f(0.0, 0.0, 0.0);
+  glVertex3f(0.0, 40.0, 0.0);
+  glEnd();
+  glPushMatrix();
+  glTranslatef(0.0, 40.0, 0.0);
+  glRotatef(90.0, 0.0, 0.0, 1.0);
+  glBegin(GL_LINES);
+  glVertex3f(0.0, 0.0, 0.0);
+  glVertex3f(0.0, 40.0, 0.0);
+  glEnd();
+  glPopMatrix();
+  glEnd();
+  // End Test Code
 
   if (showAxis) DrawAxis();
   if (showBounds) DrawBounds();
@@ -257,52 +266,52 @@ void Keyboard(unsigned char key, int x, int y) {
   Vec3f v;
 
   switch (key) {
-  case '1':
-    waypoint = 1;
-    ComputeLookAt();
-    break;
-  case '2':
-    waypoint = 2;
-    ComputeLookAt();
-    break;
-  case '3':
-    waypoint = 3;
-    ComputeLookAt();
-    break;
-  case 'z':
-    // TODO
-    cout << "Zoom in" << endl;
-    ComputeLookAt();
-    break;
-  case 'Z':
-    // TODO
-    cout << "Zoom out" << endl;
-    ComputeLookAt();
-    break;
-  case 'j':
-    // TODO
-    cout << "Orbit left" << endl;
-    ComputeLookAt();
-    break;
-  case 'k':
-    // TODO
-    cout << "Orbit right" << endl;
-    ComputeLookAt();
-    break;
-  case ' ':
-    // TODO
-    cout << "Start/stop animation" << endl;
-    break;
-  case 'a':
-    showAxis=!showAxis;
-    break;
-  case 'b':
-    showBounds=!showBounds;
-    break;
-  case 'q':
-  case 27:  // esc
-    exit(0);
-    break;
+    case '1':
+      waypoint = 1;
+      ComputeLookAt();
+      break;
+    case '2':
+      waypoint = 2;
+      ComputeLookAt();
+      break;
+    case '3':
+      waypoint = 3;
+      ComputeLookAt();
+      break;
+    case 'z':
+      // TODO
+      cout << "Zoom in" << endl;
+      ComputeLookAt();
+      break;
+    case 'Z':
+      // TODO
+      cout << "Zoom out" << endl;
+      ComputeLookAt();
+      break;
+    case 'j':
+      // TODO
+      cout << "Orbit left" << endl;
+      ComputeLookAt();
+      break;
+    case 'k':
+      // TODO
+      cout << "Orbit right" << endl;
+      ComputeLookAt();
+      break;
+    case ' ':
+      // TODO
+      cout << "Start/stop animation" << endl;
+      break;
+    case 'a':
+      showAxis=!showAxis;
+      break;
+    case 'b':
+      showBounds=!showBounds;
+      break;
+    case 'q':
+    case 27:  // esc
+      exit(0);
+      break;
   }
 
   // let glut know to redraw the screen
