@@ -271,5 +271,10 @@ ostream & operator<<(ostream & out, const Vec<NType,NDims> & v)
 typedef Vec<float, 3 >  Vec3f;
 typedef Vec<double, 3 > Vec3d;
 
+// Added a few definitions that might prove useful
+#define UNIT_X Vec<float, 3>(1, 0, 0);
+#define UNIT_Y Vec<float, 3>(0, 1, 0);
+#define UNIT_Z Vec<float, 3>(0, 0, 1);
+
 #endif
 
