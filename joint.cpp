@@ -105,8 +105,8 @@ void SceneGraph::SetFrameSize(uint32_t size) {
 void SceneGraph::AddFrame(float * data) {
   cout << "addFrame" << endl;
   // array[i][j] == array[i * size + j]
-//  memcpy(&(frames[addFrameIndex * frameSize]),
-//      data, frameSize * sizeof(*data));
+  memcpy(&(frames[addFrameIndex * frameSize]),
+      data, frameSize * sizeof(*data));
   addFrameIndex++;
 }
 

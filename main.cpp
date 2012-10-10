@@ -247,7 +247,7 @@ void Display() {
 
   // TODO: draw scene graph and animate
   //  RenderTriangles();
-//  RenderSceneGraph();
+  RenderSceneGraph();
 
   if (animating)
     cout << "Animating" << endl;
@@ -380,16 +380,57 @@ void showMenu() {
 
 void RenderSceneGraph() {
   cout << "Rendering Scene Graph" << endl;
-  glPointSize(2.0);
+  glPointSize(5.0);
+  glColor3f(1.0, 0, 0);
   RenderJoint(sg.joints[sg.root]);
 }
 
 void RenderJoint(SceneGraph::Joint j) {
   cout << "Rendering " << j.name << endl;
   glPushMatrix();
-  glBegin(GL_POINTS);
+  GLfloat p_x = 0, p_y = 0, p_z = 0, r_x = 0, r_y = 0, r_z = 0;
 
+  glTranslatef(j.offset[0], j.offset[1], j.offset[2]);
+
+  for (int i = 0; i < j.numChannels; i++) {
+    switch (j.channelOrder[i]) {
+      case BVH_XPOS_IDX :
+        p_x = sg.frames[sg.currentFrame * sg.frameSize + j.index + i];
+        glTranslatef(p_x, 0, 0);
+        break;
+      case BVH_YPOS_IDX :
+        p_y = sg.frames[sg.currentFrame * sg.frameSize + j.index + i];
+        glTranslatef(0, p_y, 0);
+        break;
+      case BVH_ZPOS_IDX :
+        p_z = sg.frames[sg.currentFrame * sg.frameSize + j.index + i];
+        glTranslatef(0, 0, p_z);
+        break;
+      case BVH_XROT_IDX :
+        r_x = sg.frames[sg.currentFrame * sg.frameSize + j.index + i];
+        glRotatef(r_x, 1, 0, 0);
+        break;
+      case BVH_YROT_IDX :
+        r_y = sg.frames[sg.currentFrame * sg.frameSize + j.index + i];
+        glRotatef(r_y, 0, 1, 0);
+        break;
+      case BVH_ZROT_IDX :
+        r_z = sg.frames[sg.currentFrame * sg.frameSize + j.index + i];
+        glRotatef(r_z, 0, 0, 1);
+        break;
+      default :
+        break;
+    }
+  }
+
+  glBegin(GL_POINTS);
+  glVertex3f(0, 0, 0);
   glEnd();
+
+  glColor3f(0, 0, 0);
+  for (int i = 0; i < j.children.size(); i++) {
+    RenderJoint(sg.joints[j.children[i]]);
+  }
   glPopMatrix();
 }
 
