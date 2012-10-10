@@ -37,7 +37,7 @@ void Keyboard(unsigned char key, int x, int y);
 void Idle();
 void Animate();
 void RenderSceneGraph();
-void RenderJoint(SceneGraph::Joint);
+void RenderJoint(SceneGraph::Joint, GLfloat, GLfloat, GLfloat);
 
 SceneGraph sg;
 bool animating = false;
@@ -200,39 +200,6 @@ void DrawBounds() {
   }
 }
 
-void RenderTriangles() {
-  cout << "Rendering triangles" << endl;
-  glColor3f(1, 0, 0);
-  glPushMatrix();
-  glRotatef(-45, 0, 1, 0);
-  glBegin(GL_TRIANGLES);
-  glVertex3f(0.0, 0.0, 0.0);
-  glVertex3f(0.0, 40.0, 0.0);
-  glVertex3f(40.0, 0.0, 0.0);
-  glEnd();
-  glPopMatrix();
-
-  glPushMatrix();
-  glRotatef(90.0, 0.0, 1.0, 0.0);
-  glBegin(GL_TRIANGLES);
-  glColor3f(0, 1, 0);
-  glVertex3f(0.0, 0.0, 0.0);
-  glVertex3f(0.0, 40.0, 0.0);
-  glVertex3f(40.0, 0.0, 0.0);
-  glEnd();
-  glPopMatrix();
-
-  glPushMatrix();
-  glRotatef(-135.0, 0, 1, 0);
-  glBegin(GL_TRIANGLES);
-  glColor3f(0, 0, 1);
-  glVertex3f(0.0, 0.0, 0.0);
-  glVertex3f(0.0, 40.0, 0.0);
-  glVertex3f(40.0, 0.0, 0.0);
-  glEnd();
-  glPopMatrix();
-}
-
 void Display() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -245,14 +212,10 @@ void Display() {
   SetDrawMode();
   DrawFloor(800, 800, 80, 80);
 
-  // TODO: draw scene graph and animate
-  //  RenderTriangles();
   RenderSceneGraph();
 
   if (animating)
     cout << "Animating" << endl;
-
-  // End Test Code
 
   if (showAxis) DrawAxis();
   if (showBounds) DrawBounds();
@@ -379,14 +342,13 @@ void showMenu() {
 }
 
 void RenderSceneGraph() {
-  cout << "Rendering Scene Graph" << endl;
   glPointSize(5.0);
-  glColor3f(1.0, 0, 0);
-  RenderJoint(sg.joints[sg.root]);
+  glLineWidth(2.0);
+  glColor3f(0, 0, 0);
+  RenderJoint(sg.joints[sg.root], 0, 0, 0);
 }
 
-void RenderJoint(SceneGraph::Joint j) {
-  cout << "Rendering " << j.name << endl;
+void RenderJoint(SceneGraph::Joint j, GLfloat a, GLfloat b, GLfloat c) {
   glPushMatrix();
   GLfloat p_x = 0, p_y = 0, p_z = 0, r_x = 0, r_y = 0, r_z = 0;
 
@@ -426,10 +388,12 @@ void RenderJoint(SceneGraph::Joint j) {
   glBegin(GL_POINTS);
   glVertex3f(0, 0, 0);
   glEnd();
-
-  glColor3f(0, 0, 0);
+  glBegin(GL_LINES);
+  glVertex3f(a, b, c);
+  glVertex3f(0, 0, 0);
+  glEnd();
   for (int i = 0; i < j.children.size(); i++) {
-    RenderJoint(sg.joints[j.children[i]]);
+    RenderJoint(sg.joints[j.children[i]], 0, 0, 0);
   }
   glPopMatrix();
 }
