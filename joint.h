@@ -35,10 +35,10 @@ class SceneGraph {
 
     uint32_t root;
     map<uint32_t, Joint> joints;
+    float* frames;
     float frameTime;
     uint32_t numFrames;
     uint32_t frameSize;
-    vector<float*> frames;
     uint32_t currentFrame;
     SceneGraph();
     ~SceneGraph();
@@ -57,6 +57,11 @@ class SceneGraph {
     void SetFrameSize(uint32_t size);
     void AddFrame(float * data);
     void SetCurrentFrame(uint32_t frameNumber);
+
+  private:
+    int addFrameIndex;
+
+    void InitFramesArray();
 };
 
 

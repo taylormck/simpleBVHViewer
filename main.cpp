@@ -37,6 +37,7 @@ void Keyboard(unsigned char key, int x, int y);
 void Idle();
 void Animate();
 void RenderSceneGraph();
+void RenderJoint(SceneGraph::Joint);
 
 SceneGraph sg;
 bool animating = false;
@@ -245,8 +246,8 @@ void Display() {
   DrawFloor(800, 800, 80, 80);
 
   // TODO: draw scene graph and animate
-  RenderTriangles();
-  RenderSceneGraph();
+  //  RenderTriangles();
+//  RenderSceneGraph();
 
   if (animating)
     cout << "Animating" << endl;
@@ -379,6 +380,17 @@ void showMenu() {
 
 void RenderSceneGraph() {
   cout << "Rendering Scene Graph" << endl;
+  glPointSize(2.0);
+  RenderJoint(sg.joints[sg.root]);
+}
+
+void RenderJoint(SceneGraph::Joint j) {
+  cout << "Rendering " << j.name << endl;
+  glPushMatrix();
+  glBegin(GL_POINTS);
+
+  glEnd();
+  glPopMatrix();
 }
 
 int main(int argc, char *argv[]) {
