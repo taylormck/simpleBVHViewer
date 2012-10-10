@@ -35,8 +35,8 @@ void Display();
 void Resize(int width, int height);
 void Keyboard(unsigned char key, int x, int y);
 void Idle();
-void InitSceneGraph();
 void Animate();
+void RenderSceneGraph();
 
 SceneGraph sg;
 bool animating = false;
@@ -199,21 +199,8 @@ void DrawBounds() {
   }
 }
 
-void Display() {
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-  SetProjection();
-
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-  SetLighting();
-  SetCamera();
-  SetDrawMode();
-  DrawFloor(800, 800, 80, 80);
-
-  // TODO: draw scene graph and animate
-
-  // Test Code
+void RenderTriangles() {
+  cout << "Rendering triangles" << endl;
   glColor3f(1, 0, 0);
   glPushMatrix();
   glRotatef(-45, 0, 1, 0);
@@ -225,7 +212,6 @@ void Display() {
   glPopMatrix();
 
   glPushMatrix();
-  //  glTranslatef(0.0, 40.0, 0.0);
   glRotatef(90.0, 0.0, 1.0, 0.0);
   glBegin(GL_TRIANGLES);
   glColor3f(0, 1, 0);
@@ -244,6 +230,23 @@ void Display() {
   glVertex3f(40.0, 0.0, 0.0);
   glEnd();
   glPopMatrix();
+}
+
+void Display() {
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  SetProjection();
+
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  SetLighting();
+  SetCamera();
+  SetDrawMode();
+  DrawFloor(800, 800, 80, 80);
+
+  // TODO: draw scene graph and animate
+  RenderTriangles();
+  RenderSceneGraph();
 
   if (animating)
     cout << "Animating" << endl;
@@ -374,8 +377,8 @@ void showMenu() {
   cout << "[SPACE] - start/stop" << endl;
 }
 
-void InitSceneGraph() {
-  sg.CreateRoot("Root", 0);
+void RenderSceneGraph() {
+  cout << "Rendering Scene Graph" << endl;
 }
 
 int main(int argc, char *argv[]) {
@@ -394,8 +397,6 @@ int main(int argc, char *argv[]) {
   processCommandLine(argc, argv);
 
   showMenu();
-
-  InitSceneGraph();
 
   InitGL();
 

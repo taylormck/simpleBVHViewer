@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdint.h>
 #include <iostream>
 
@@ -12,11 +13,10 @@ SceneGraph::Joint::Joint()
     index(0), jointType(0) {}
 
 SceneGraph::Joint::Joint(const char* _name, uint32_t _id, uint16_t type)
-  : name(NULL), id(_id), numChannels(0), channelOrder(NULL),
+  : name(NULL), id(_id), numChannels(0),
     channelFlags(0), index(0), jointType(type) {
   name = new char[sizeof(_name)];
-  //  Couldn't use strcpy() because the check-code was complaining
-  memcpy(name, _name, sizeof(_name));
+  snprintf(name, strlen(_name) + 1, "%s", _name);
 }
 
 SceneGraph::Joint::~Joint() {}
@@ -53,10 +53,7 @@ void SceneGraph::SetChild(uint32_t parent, uint32_t child) {
 void SceneGraph::SetOffset(uint32_t id, float * offset) {
   cout << "setOffset:id=" << id << " offset=(" << offset[0] << ","
        << offset[1]<< "," << offset[2] << ")" << endl;
-  if(joints[id].offset == NULL){
-    joints[id].offset = malloc(3 * sizeof(float));
-  }
-  memcpy(joints[id].offset, offset, 3 * sizeof(float));
+  memcpy(joints[id].offset, offset, 3 * sizeof(*offset));
 }
 
 void SceneGraph::SetNumChannels(uint32_t id, uint16_t num) {
@@ -71,7 +68,7 @@ void SceneGraph::SetChannelFlags(uint32_t id, uint16_t flags) {
 
 void SceneGraph::SetChannelOrder(uint32_t id, int * order) {
   cout  << "setChannelOrder:id=" << id << endl;
-  memcpy(joints[id].channelOrder, order, 6 * sizeof(int));
+  memcpy(joints[id].channelOrder, order, 6 * sizeof(*order));
 }
 
 void SceneGraph::SetFrameIndex(uint32_t id, uint32_t index) {
@@ -96,7 +93,7 @@ void SceneGraph::SetFrameSize(uint32_t size) {
 
 void SceneGraph::AddFrame(float * data) {
   cout << "addFrame" << endl;
-  frames.push_back(*data);
+  frames.push_back(new float[frameSize]);
 }
 
 void SceneGraph::SetCurrentFrame(uint32_t frameNumber) {

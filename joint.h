@@ -11,23 +11,26 @@
 using namespace std;
 
 class SceneGraph {
-  private:
-    class Joint {
-      public:
-        char* name;
-        Joint* parent;
-        vector<uint32_t> children;
-        uint32_t id;
-        float* offset;
-        uint16_t jointType;
-        uint16_t numChannels;
-        int channelOrder[6];
-        uint16_t channelFlags;
-        uint32_t index;
+  public:
+    // I decided to make everything public so I can access it from
+    // the main.
+    // It's not the "right" way to do it, but it's a small
+    // project and I'd like to keep it simple
+    struct Joint {
+      char* name;
+      Joint* parent;
+      vector<uint32_t> children;
+      uint32_t id;
+      float offset[3];
+      uint16_t jointType;
+      uint16_t numChannels;
+      int channelOrder[6];
+      uint16_t channelFlags;
+      uint32_t index;
 
-        Joint();
-        Joint(const char* _name, uint32_t _id, uint16_t type);
-        ~Joint();
+      Joint();
+      Joint(const char* _name, uint32_t _id, uint16_t type);
+      ~Joint();
     };
 
     uint32_t root;
@@ -35,12 +38,11 @@ class SceneGraph {
     float frameTime;
     uint32_t numFrames;
     uint32_t frameSize;
-    vector<float> frames;
+    vector<float*> frames;
     uint32_t currentFrame;
-
-  public:
     SceneGraph();
     ~SceneGraph();
+
     void CreateRoot(const char * name, uint32_t id);
     void CreateJoint(const char * name, uint32_t id);
     void CreateEndSite(const char * name, uint32_t id);
