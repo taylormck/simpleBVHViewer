@@ -68,6 +68,3 @@ clean:
 	rm lex.yy.cpp
 	rm y.tab.h
 
-# My stuff
-unit:
-	g++ -o unit.cpp mat3.h point3.h vector3.h unit && ./unit

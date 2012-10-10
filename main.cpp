@@ -35,8 +35,11 @@ void Display();
 void Resize(int width, int height);
 void Keyboard(unsigned char key, int x, int y);
 void Idle();
+void InitSceneGraph();
+void Animate();
 
 SceneGraph sg;
+bool animating = false;
 
 #define PI 3.14159265f
 
@@ -211,21 +214,40 @@ void Display() {
   // TODO: draw scene graph and animate
 
   // Test Code
-  glLineWidth(2.0);
   glColor3f(1, 0, 0);
-  glBegin(GL_LINES);
-  glVertex3f(0.0, 0.0, 0.0);
-  glVertex3f(0.0, 40.0, 0.0);
-  glEnd();
   glPushMatrix();
-  glTranslatef(0.0, 40.0, 0.0);
-  glRotatef(90.0, 0.0, 0.0, 1.0);
-  glBegin(GL_LINES);
+  glRotatef(-45, 0, 1, 0);
+  glBegin(GL_TRIANGLES);
   glVertex3f(0.0, 0.0, 0.0);
   glVertex3f(0.0, 40.0, 0.0);
+  glVertex3f(40.0, 0.0, 0.0);
   glEnd();
   glPopMatrix();
+
+  glPushMatrix();
+  //  glTranslatef(0.0, 40.0, 0.0);
+  glRotatef(90.0, 0.0, 1.0, 0.0);
+  glBegin(GL_TRIANGLES);
+  glColor3f(0, 1, 0);
+  glVertex3f(0.0, 0.0, 0.0);
+  glVertex3f(0.0, 40.0, 0.0);
+  glVertex3f(40.0, 0.0, 0.0);
   glEnd();
+  glPopMatrix();
+
+  glPushMatrix();
+  glRotatef(-135.0, 0, 1, 0);
+  glBegin(GL_TRIANGLES);
+  glColor3f(0, 0, 1);
+  glVertex3f(0.0, 0.0, 0.0);
+  glVertex3f(0.0, 40.0, 0.0);
+  glVertex3f(40.0, 0.0, 0.0);
+  glEnd();
+  glPopMatrix();
+
+  if (animating)
+    cout << "Animating" << endl;
+
   // End Test Code
 
   if (showAxis) DrawAxis();
@@ -299,8 +321,8 @@ void Keyboard(unsigned char key, int x, int y) {
       ComputeLookAt();
       break;
     case ' ':
-      // TODO
       cout << "Start/stop animation" << endl;
+      animating = !animating;
       break;
     case 'a':
       showAxis=!showAxis;
@@ -319,6 +341,13 @@ void Keyboard(unsigned char key, int x, int y) {
 }
 
 void Idle() {
+  if (animating) {
+    Animate();
+    glutPostRedisplay();
+  }
+}
+
+void Animate() {
 }
 
 void processCommandLine(int argc, char *argv[]) {
@@ -345,6 +374,10 @@ void showMenu() {
   cout << "[SPACE] - start/stop" << endl;
 }
 
+void InitSceneGraph() {
+  sg.CreateRoot("Root", 0);
+}
+
 int main(int argc, char *argv[]) {
   // Initialize GLUT
   glutInit(&argc, argv);
@@ -361,6 +394,8 @@ int main(int argc, char *argv[]) {
   processCommandLine(argc, argv);
 
   showMenu();
+
+  InitSceneGraph();
 
   InitGL();
 

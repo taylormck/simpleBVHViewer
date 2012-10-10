@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <cstring>
+#include <map>
 
 #include "./bvh_defs.h"
 #include "./vec.h"
@@ -11,11 +12,35 @@ using namespace std;
 
 class SceneGraph {
   private:
-    uint32_t jointCounter;
+    class Joint {
+      public:
+        char* name;
+        Joint* parent;
+        vector<uint32_t> children;
+        uint32_t id;
+        float* offset;
+        uint16_t jointType;
+        uint16_t numChannels;
+        int channelOrder[6];
+        uint16_t channelFlags;
+        uint32_t index;
 
+        Joint();
+        Joint(const char* _name, uint32_t _id, uint16_t type);
+        ~Joint();
+    };
+
+    uint32_t root;
+    map<uint32_t, Joint> joints;
+    float frameTime;
+    uint32_t numFrames;
+    uint32_t frameSize;
+    vector<float> frames;
+    uint32_t currentFrame;
 
   public:
-    SceneGraph() : jointCounter(0) {}
+    SceneGraph();
+    ~SceneGraph();
     void CreateRoot(const char * name, uint32_t id);
     void CreateJoint(const char * name, uint32_t id);
     void CreateEndSite(const char * name, uint32_t id);
