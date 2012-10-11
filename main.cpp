@@ -65,7 +65,6 @@ void SetLighting();
 
 void InitGL() {
   // Perform any necessary GL initialization in this function
-
   // enable depth testing, and set clear color to white
   glEnable(GL_DEPTH_TEST);
   glDepthMask(GL_TRUE);
@@ -112,7 +111,6 @@ void SetCamera() {
 void SetProjection() {
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-
   gluPerspective(40.0, window_aspect, 1, 1500);
 }
 
@@ -189,7 +187,6 @@ void DrawRect(const Vec3f & u, const Vec3f & v, const Vec3f & o) {
 
 void DrawBounds() {
   Vec3f u, v, m1[] = {bbox.min, bbox.max}, m2[] = {bbox.max, bbox.min};
-
   for (int k = 0; k < 2; k++) {
     for (int i = 0; i < 3; i++) {
       for (int j = i+1; j < 3; j++) {
@@ -356,7 +353,6 @@ void RenderSceneGraph() {
 }
 
 void RenderJoint(SceneGraph::Joint* j) {
-  cout << "Rendering joint " << j->name << endl;
   // Draw the line between the previous joint and this one
   glBegin(GL_LINES);
   glColor3f(0.0, 0.0, 0.0);
@@ -417,15 +413,6 @@ void RenderJoint(SceneGraph::Joint* j) {
   glBegin(GL_POINTS);
   glVertex3f(0.0, 0.0, 0.0);  // Inside white dot
   glEnd();
-
-  /*
-  glBegin(GL_TRIANGLES);
-  glColor3f(0.0, 0.0, 0.0);
-  glVertex3f(0.0, 0.0, 0.0);
-  glVertex3f(5.0, 0.0, 0.0);
-  glVertex3f(0.0, 5.0, 0.0);
-  glEnd();
-  */
 
   glPopMatrix();
 }

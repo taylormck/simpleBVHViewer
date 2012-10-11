@@ -33,54 +33,43 @@ void SceneGraph::CreateJoint(const char* name, uint32_t _id, unsigned char t) {
 }
 
 void SceneGraph::CreateRoot(const char * name, uint32_t id) {
-  cout << "createRoot:name=" << name << " id=" << id << endl;
   CreateJoint(name, id, 0);
 }
 
 void SceneGraph::CreateJoint(const char * name, uint32_t id) {
-  cout << "createJoint:name=" << name << " id=" << id << endl;
   CreateJoint(name, id, 1);
 }
 
 void SceneGraph::CreateEndSite(const char * name, uint32_t id) {
-  cout << "createEndSite:name=" << name << " id=" << id << endl;
   CreateJoint(name, id, 2);
 }
 
 void SceneGraph::SetChild(uint32_t parent, uint32_t child) {
-  cout << "setChild:parent=" << parent << " child=" << child << endl;
   joints[child].parent = parent;
   joints[parent].children.push_back(child);
 }
 
 void SceneGraph::SetOffset(uint32_t id, float * offset) {
-  cout << "setOffset:id=" << id << " offset=(" << offset[0] << ","
-      << offset[1]<< "," << offset[2] << ")" << endl;
   memcpy(joints[id].offset, offset, 3 * sizeof(*offset));
 }
 
 void SceneGraph::SetNumChannels(uint32_t id, uint16_t num) {
-  cout << "setNumChannels:id=" << id << " num=" << num << endl;
   joints[id].numchans = num;
 }
 
 void SceneGraph::SetChannelFlags(uint32_t id, uint16_t flags) {
-  cout << "setChannelFlags:id=" << id << " flags=" << flags << endl;
   joints[id].chanflags = flags;
 }
 
 void SceneGraph::SetChannelOrder(uint32_t id, int * order) {
-  cout  << "setChannelOrder:id=" << id << endl;
   memcpy(joints[id].order, order, 6 * sizeof(*order));
 }
 
 void SceneGraph::SetFrameIndex(uint32_t id, uint32_t index) {
-  cout << "setFrameIndex:id=" << id << " index=" << index << endl;
   joints[id].index = index;
 }
 
 void SceneGraph::SetFrameTime(float delta) {
-  cout << "setFrameTime:delta=" << delta << endl;
   frameTime = delta;
 }
 
