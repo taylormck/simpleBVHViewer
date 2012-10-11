@@ -40,6 +40,10 @@ void RenderJoint(SceneGraph::Joint, GLfloat, GLfloat, GLfloat);
 
 SceneGraph sg;
 bool animating = false;
+GLfloat orbit;
+GLfloat zoom;
+Vec3f orbitVector;
+GLdouble startTimer;
 
 #define PI 3.14159265f
 
@@ -76,7 +80,7 @@ void InitGL() {
 }
 
 void ComputeLookAt() {
-  float maxDist = (bbox.max-bbox.min).max();
+  float maxDist = (bbox.max-bbox.min).max() * zoom;
   center = (bbox.max+bbox.min)/2.0f;
   up = Vec3f::makeVec(0.0f, 1.0f, 0.0f);
   eye = center+Vec3f::makeVec(0.0f, 0.75f*maxDist, -1.5f*maxDist);
@@ -209,8 +213,10 @@ void Display() {
   SetLighting();
   SetCamera();
   SetDrawMode();
-  DrawFloor(800, 800, 80, 80);
 
+  if (orbit != 0) glRotatef(orbit, 0, 1, 0);
+
+  DrawFloor(800, 800, 80, 80);
   RenderSceneGraph();
 
   if (showAxis) DrawAxis();
@@ -264,24 +270,26 @@ void Keyboard(unsigned char key, int x, int y) {
       ComputeLookAt();
       break;
     case 'z':
-      // TODO
       cout << "Zoom in" << endl;
+      zoom /= 2;
       ComputeLookAt();
       break;
     case 'Z':
-      // TODO
+      zoom *= 2;
       cout << "Zoom out" << endl;
       ComputeLookAt();
       break;
     case 'j':
-      // TODO
-      cout << "Orbit left" << endl;
-      ComputeLookAt();
+      orbit += 1.0;
+      if (orbit >= 360.0)
+        orbit -= 360.0;
+      //      ComputeLookAt();
       break;
     case 'k':
-      // TODO
-      cout << "Orbit right" << endl;
-      ComputeLookAt();
+      orbit -= 1.0;
+      if (orbit <= -3600.0)
+        orbit += 360.0;
+      //      ComputeLookAt();
       break;
     case ' ':
       cout << "Start/stop animation" << endl;
@@ -303,7 +311,6 @@ void Keyboard(unsigned char key, int x, int y) {
   glutPostRedisplay();
 }
 
-GLdouble startTimer;
 void Idle() {
   if (animating) {
     GLdouble nowTime = glutGet(GLUT_ELAPSED_TIME);
@@ -346,9 +353,6 @@ void RenderSceneGraph() {
 }
 
 void RenderJoint(SceneGraph::Joint j, GLfloat a, GLfloat b, GLfloat c) {
-  glPushMatrix();
-  GLfloat p_x = 0, p_y = 0, p_z = 0, r_x = 0, r_y = 0, r_z = 0;
-
   // Draw the line between the previous joint and this one
   if (j.jointType != BVH_ROOT) {
     glBegin(GL_LINE);
@@ -358,6 +362,8 @@ void RenderJoint(SceneGraph::Joint j, GLfloat a, GLfloat b, GLfloat c) {
     glVertex3f(j.offset[0], j.offset[1], j.offset[2]);
     glEnd();
   }
+  glPushMatrix();
+  GLfloat p_x = 0, p_y = 0, p_z = 0, r_x = 0, r_y = 0, r_z = 0;
 
   glTranslatef(j.offset[0], j.offset[1], j.offset[2]);
 
@@ -391,27 +397,32 @@ void RenderJoint(SceneGraph::Joint j, GLfloat a, GLfloat b, GLfloat c) {
         break;
     }
   }
-  // Draw outlined dot
-  glColor3f(0, 0, 0);
-  glPointSize(6.0);
-  glBegin(GL_POINT);
-  glVertex3f(0, 0, 0);  // Outside black dot
-  glEnd();
-
-  glColor3f(1.0, 1.0, 1.0);
-  glPointSize(3.0);
-  glBegin(GL_POINT);
-  glVertex3f(0, 0, 0);  // Inside white dot
-  glEnd();
 
   // Draw the children
   for (int i = 0; i < j.children.size(); i++) {
     RenderJoint(sg.joints[j.children[i]], 0, 0, 0);
   }
+
+  // Draw outlined dot
+  glColor3f(0, 0, 0);
+  glPointSize(8.0);
+  glBegin(GL_POINT);
+  glVertex3f(0, 0, 0);  // Outside black dot
+  glEnd();
+
+  glColor3f(1.0, 1.0, 1.0);
+  glPointSize(5.0);
+  glBegin(GL_POINT);
+  glVertex3f(0, 0, 0);  // Inside white dot
+  glEnd();
+
   glPopMatrix();
 }
 
 int main(int argc, char *argv[]) {
+  startTimer = 0;
+  zoom = 1;
+  orbit = 0;
   // Initialize GLUT
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
@@ -427,7 +438,6 @@ int main(int argc, char *argv[]) {
   processCommandLine(argc, argv);
   showMenu();
 
-  startTimer = 0;
 
   InitGL();
   glutMainLoop();

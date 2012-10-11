@@ -116,7 +116,8 @@ void SceneGraph::SetCurrentFrame(uint32_t frameNumber) {
 }
 
 void SceneGraph::nextFrame() {
-  if (currentFrame < numFrames) {
-    currentFrame++;
+  currentFrame++;
+  if (currentFrame == numFrames) {
+    currentFrame = 0;
   }
 }
