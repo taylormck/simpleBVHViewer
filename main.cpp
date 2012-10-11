@@ -94,8 +94,6 @@ void ComputeLookAt() {
     eye = center+Vec3f::makeVec(1.5f*maxDist, 0.1f*maxDist, 0);
   }
   axisLen = maxDist*0.05f;
-
-  eye += Vec3f::makeVec(pan, height, 0);
 }
 
 void SetLighting() {
@@ -300,24 +298,7 @@ void Keyboard(unsigned char key, int x, int y) {
       if (orbit <= -360.0)
         orbit += 360.0;
       break;
-    case GLUT_KEY_UP:
-      height -= 10.0;
-      ComputeLookAt();
-      break;
-    case GLUT_KEY_DOWN:
-      height += 10.0;
-      ComputeLookAt();
-      break;
-    case GLUT_KEY_LEFT:
-      pan += 10.0;
-      ComputeLookAt();
-      break;
-    case GLUT_KEY_RIGHT:
-      pan -= 10.0;
-      ComputeLookAt();
-      break;
     case ' ':
-      cout << "Start/stop animation" << endl;
       animating = !animating;
       break;
     case 'a':
