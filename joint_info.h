@@ -17,6 +17,8 @@ struct joint_info
 	unsigned short chanflags;
 	int order[6];
 	float offset[3];
+	uint32_t index;
+	vector<uint32_t> children;
 };
 
 vector<joint_info> joints;

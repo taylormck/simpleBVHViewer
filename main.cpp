@@ -36,7 +36,7 @@ void Resize(int width, int height);
 void Keyboard(unsigned char key, int x, int y);
 void Idle();
 void RenderSceneGraph();
-void RenderJoint(SceneGraph::Joint, GLfloat, GLfloat, GLfloat);
+void RenderJoint(SceneGraph::Joint* j);
 
 SceneGraph sg;
 bool animating = false;
@@ -352,49 +352,48 @@ void showMenu() {
 }
 
 void RenderSceneGraph() {
-  RenderJoint(sg.joints[sg.root], 0, 0, 0);
+  RenderJoint(&(sg.joints[0]));
 }
 
-void RenderJoint(SceneGraph::Joint j, GLfloat a, GLfloat b, GLfloat c) {
+void RenderJoint(SceneGraph::Joint* j) {
+  cout << "Rendering joint " << j->name << endl;
   // Draw the line between the previous joint and this one
-  if (j.jointType != BVH_ROOT) {
-    glBegin(GL_LINE);
-    glColor3f(0, 0, 0);
-    glLineWidth(10.0);
-    glVertex3f(0, 0, 0);
-    glVertex3f(j.offset[0], j.offset[1], j.offset[2]);
-    glEnd();
-  }
+  glBegin(GL_LINES);
+  glColor3f(0.0, 0.0, 0.0);
+  glLineWidth(10.0);
+  glVertex3f(0.0, 0.0, 0.0);
+  glVertex3f(j->offset[0], j->offset[1], j->offset[2]);
+  glEnd();
   glPushMatrix();
-  GLfloat p_x = 0, p_y = 0, p_z = 0, r_x = 0, r_y = 0, r_z = 0;
 
-  glTranslatef(j.offset[0], j.offset[1], j.offset[2]);
+  glTranslatef(j->offset[0], j->offset[1], j->offset[2]);
 
-  for (int i = 0; i < j.numChannels; i++) {
-    switch (j.channelOrder[i]) {
+  float p_x, p_y, p_z, r_x, r_y, r_z;
+  for (int i = 0; i < j->numchans; i++) {
+    switch (j->order[i]) {
       case BVH_XPOS_IDX :
-        p_x = sg.frames[sg.currentFrame * sg.frameSize + j.index + i];
-        glTranslatef(p_x, 0, 0);
+        p_x = sg.frames[sg.currentFrame * sg.frameSize + j->index + i];
+        glTranslatef(p_x, 0.0, 0.0);
         break;
       case BVH_YPOS_IDX :
-        p_y = sg.frames[sg.currentFrame * sg.frameSize + j.index + i];
-        glTranslatef(0, p_y, 0);
+        p_y = sg.frames[sg.currentFrame * sg.frameSize + j->index + i];
+        glTranslatef(0.0, p_y, 0.0);
         break;
       case BVH_ZPOS_IDX :
-        p_z = sg.frames[sg.currentFrame * sg.frameSize + j.index + i];
-        glTranslatef(0, 0, p_z);
+        p_z = sg.frames[sg.currentFrame * sg.frameSize + j->index + i];
+        glTranslatef(0.0, 0.0, p_z);
         break;
       case BVH_XROT_IDX :
-        r_x = sg.frames[sg.currentFrame * sg.frameSize + j.index + i];
-        glRotatef(r_x, 1, 0, 0);
+        r_x = sg.frames[sg.currentFrame * sg.frameSize + j->index + i];
+        glRotatef(r_x, 1.0, 0.0, 0.0);
         break;
       case BVH_YROT_IDX :
-        r_y = sg.frames[sg.currentFrame * sg.frameSize + j.index + i];
-        glRotatef(r_y, 0, 1, 0);
+        r_y = sg.frames[sg.currentFrame * sg.frameSize + j->index + i];
+        glRotatef(r_y, 0.0, 1.0, 0.0);
         break;
       case BVH_ZROT_IDX :
-        r_z = sg.frames[sg.currentFrame * sg.frameSize + j.index + i];
-        glRotatef(r_z, 0, 0, 1);
+        r_z = sg.frames[sg.currentFrame * sg.frameSize + j->index + i];
+        glRotatef(r_z, 0.0, 0.0, 1.0);
         break;
       default :
         break;
@@ -402,22 +401,31 @@ void RenderJoint(SceneGraph::Joint j, GLfloat a, GLfloat b, GLfloat c) {
   }
 
   // Draw the children
-  for (int i = 0; i < j.children.size(); i++) {
-    RenderJoint(sg.joints[j.children[i]], 0, 0, 0);
+  for (uint32_t i = 0; i < j->children.size(); i++) {
+    RenderJoint(&(sg.joints[j->children[i]]));
   }
 
   // Draw outlined dot
-  glColor3f(0, 0, 0);
+  glColor3f(0.0, 0.0, 0.0);
   glPointSize(8.0);
-  glBegin(GL_POINT);
-  glVertex3f(0, 0, 0);  // Outside black dot
+  glBegin(GL_POINTS);
+  glVertex3f(0.0, 0.0, 0.0);  // Outside black dot
   glEnd();
 
   glColor3f(1.0, 1.0, 1.0);
   glPointSize(5.0);
-  glBegin(GL_POINT);
-  glVertex3f(0, 0, 0);  // Inside white dot
+  glBegin(GL_POINTS);
+  glVertex3f(0.0, 0.0, 0.0);  // Inside white dot
   glEnd();
+
+  /*
+  glBegin(GL_TRIANGLES);
+  glColor3f(0.0, 0.0, 0.0);
+  glVertex3f(0.0, 0.0, 0.0);
+  glVertex3f(5.0, 0.0, 0.0);
+  glVertex3f(0.0, 5.0, 0.0);
+  glEnd();
+  */
 
   glPopMatrix();
 }
