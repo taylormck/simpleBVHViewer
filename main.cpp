@@ -41,6 +41,8 @@ void RenderJoint(SceneGraph::Joint, GLfloat, GLfloat, GLfloat);
 SceneGraph sg;
 bool animating = false;
 GLfloat orbit;
+GLfloat height;
+GLfloat pan;
 GLfloat zoom;
 Vec3f orbitVector;
 GLdouble startTimer;
@@ -92,6 +94,8 @@ void ComputeLookAt() {
     eye = center+Vec3f::makeVec(1.5f*maxDist, 0.1f*maxDist, 0);
   }
   axisLen = maxDist*0.05f;
+
+  eye += Vec3f::makeVec(pan, height, 0);
 }
 
 void SetLighting() {
@@ -260,36 +264,57 @@ void Keyboard(unsigned char key, int x, int y) {
     case '1':
       waypoint = 1;
       ComputeLookAt();
+      orbit = 0;
+      height = 0;
+      pan = 0;
       break;
     case '2':
       waypoint = 2;
+      orbit = 0;
+      height = 0;
+      pan = 0;
       ComputeLookAt();
       break;
     case '3':
       waypoint = 3;
+      orbit = 0;
+      height = 0;
+      pan = 0;
       ComputeLookAt();
       break;
     case 'z':
-      cout << "Zoom in" << endl;
       zoom /= 2;
       ComputeLookAt();
       break;
     case 'Z':
       zoom *= 2;
-      cout << "Zoom out" << endl;
       ComputeLookAt();
       break;
     case 'j':
       orbit += 1.0;
       if (orbit >= 360.0)
         orbit -= 360.0;
-      //      ComputeLookAt();
       break;
     case 'k':
       orbit -= 1.0;
-      if (orbit <= -3600.0)
+      if (orbit <= -360.0)
         orbit += 360.0;
-      //      ComputeLookAt();
+      break;
+    case GLUT_KEY_UP:
+      height -= 10.0;
+      ComputeLookAt();
+      break;
+    case GLUT_KEY_DOWN:
+      height += 10.0;
+      ComputeLookAt();
+      break;
+    case GLUT_KEY_LEFT:
+      pan += 10.0;
+      ComputeLookAt();
+      break;
+    case GLUT_KEY_RIGHT:
+      pan -= 10.0;
+      ComputeLookAt();
       break;
     case ' ':
       cout << "Start/stop animation" << endl;
@@ -423,6 +448,8 @@ int main(int argc, char *argv[]) {
   startTimer = 0;
   zoom = 1;
   orbit = 0;
+  height = 0;
+  pan = 0;
   // Initialize GLUT
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
