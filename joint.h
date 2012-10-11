@@ -58,6 +58,8 @@ class SceneGraph {
     void AddFrame(float * data);
     void SetCurrentFrame(uint32_t frameNumber);
 
+    void nextFrame();
+
   private:
     int addFrameIndex;
 

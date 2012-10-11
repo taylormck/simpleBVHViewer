@@ -106,11 +106,17 @@ void SceneGraph::AddFrame(float * data) {
   cout << "addFrame" << endl;
   // array[i][j] == array[i * size + j]
   memcpy(&(frames[addFrameIndex * frameSize]),
-      data, frameSize * sizeof(*data));
+           data, frameSize * sizeof(*data));
   addFrameIndex++;
 }
 
 void SceneGraph::SetCurrentFrame(uint32_t frameNumber) {
   cout << "setCurrentFrame:frameNumber=" << frameNumber << endl;
   currentFrame = frameNumber;
+}
+
+void SceneGraph::nextFrame() {
+  if (currentFrame < numFrames) {
+    currentFrame++;
+  }
 }

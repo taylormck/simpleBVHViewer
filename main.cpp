@@ -35,7 +35,6 @@ void Display();
 void Resize(int width, int height);
 void Keyboard(unsigned char key, int x, int y);
 void Idle();
-void Animate();
 void RenderSceneGraph();
 void RenderJoint(SceneGraph::Joint, GLfloat, GLfloat, GLfloat);
 
@@ -214,9 +213,6 @@ void Display() {
 
   RenderSceneGraph();
 
-  if (animating)
-    cout << "Animating" << endl;
-
   if (showAxis) DrawAxis();
   if (showBounds) DrawBounds();
 
@@ -307,14 +303,18 @@ void Keyboard(unsigned char key, int x, int y) {
   glutPostRedisplay();
 }
 
+GLdouble startTimer;
 void Idle() {
   if (animating) {
-    Animate();
-    glutPostRedisplay();
-  }
-}
+    GLdouble nowTime = glutGet(GLUT_ELAPSED_TIME);
 
-void Animate() {
+    // Only display when it's time
+    if (nowTime - startTimer >= sg.frameTime) {
+      startTimer = nowTime;
+      sg.nextFrame();
+      glutPostRedisplay();
+    }
+  }
 }
 
 void processCommandLine(int argc, char *argv[]) {
@@ -342,15 +342,22 @@ void showMenu() {
 }
 
 void RenderSceneGraph() {
-  glPointSize(5.0);
-  glLineWidth(2.0);
-  glColor3f(0, 0, 0);
   RenderJoint(sg.joints[sg.root], 0, 0, 0);
 }
 
 void RenderJoint(SceneGraph::Joint j, GLfloat a, GLfloat b, GLfloat c) {
   glPushMatrix();
   GLfloat p_x = 0, p_y = 0, p_z = 0, r_x = 0, r_y = 0, r_z = 0;
+
+  // Draw the line between the previous joint and this one
+  if (j.jointType != BVH_ROOT) {
+    glBegin(GL_LINE);
+    glColor3f(0, 0, 0);
+    glLineWidth(10.0);
+    glVertex3f(0, 0, 0);
+    glVertex3f(j.offset[0], j.offset[1], j.offset[2]);
+    glEnd();
+  }
 
   glTranslatef(j.offset[0], j.offset[1], j.offset[2]);
 
@@ -384,14 +391,20 @@ void RenderJoint(SceneGraph::Joint j, GLfloat a, GLfloat b, GLfloat c) {
         break;
     }
   }
+  // Draw outlined dot
+  glColor3f(0, 0, 0);
+  glPointSize(6.0);
+  glBegin(GL_POINT);
+  glVertex3f(0, 0, 0);  // Outside black dot
+  glEnd();
 
-  glBegin(GL_POINTS);
-  glVertex3f(0, 0, 0);
+  glColor3f(1.0, 1.0, 1.0);
+  glPointSize(3.0);
+  glBegin(GL_POINT);
+  glVertex3f(0, 0, 0);  // Inside white dot
   glEnd();
-  glBegin(GL_LINES);
-  glVertex3f(a, b, c);
-  glVertex3f(0, 0, 0);
-  glEnd();
+
+  // Draw the children
   for (int i = 0; i < j.children.size(); i++) {
     RenderJoint(sg.joints[j.children[i]], 0, 0, 0);
   }
@@ -412,11 +425,11 @@ int main(int argc, char *argv[]) {
   glutIdleFunc(Idle);
 
   processCommandLine(argc, argv);
-
   showMenu();
 
-  InitGL();
+  startTimer = 0;
 
+  InitGL();
   glutMainLoop();
 
   return 0;
