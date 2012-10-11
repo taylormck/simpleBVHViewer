@@ -261,23 +261,20 @@ void Keyboard(unsigned char key, int x, int y) {
   switch (key) {
     case '1':
       waypoint = 1;
-      ComputeLookAt();
       orbit = 0;
-      height = 0;
-      pan = 0;
+      zoom = 1;
+      ComputeLookAt();
       break;
     case '2':
       waypoint = 2;
       orbit = 0;
-      height = 0;
-      pan = 0;
+      zoom = 1;
       ComputeLookAt();
       break;
     case '3':
       waypoint = 3;
       orbit = 0;
-      height = 0;
-      pan = 0;
+      zoom = 1;
       ComputeLookAt();
       break;
     case 'z':
