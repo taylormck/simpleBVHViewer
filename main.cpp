@@ -37,12 +37,11 @@ void Keyboard(unsigned char key, int x, int y);
 void Idle();
 void RenderSceneGraph();
 void RenderJoint(SceneGraph::Joint* j);
+void DrawRectPrism(GLfloat, GLfloat, GLfloat);
 
 SceneGraph sg;
 bool animating = false;
 GLfloat orbit;
-GLfloat height;
-GLfloat pan;
 GLfloat zoom;
 Vec3f orbitVector;
 GLdouble startTimer;
@@ -348,23 +347,128 @@ void showMenu() {
   cout << "[SPACE] - start/stop" << endl;
 }
 
+void DrawRectPrism(GLfloat width, GLfloat height, GLfloat depth) {
+  glColor3f(1.0, 1.0, 1.0);
+  glBegin(GL_TRIANGLES);
+
+  // Front face
+  glVertex3f(0, 0, 0);
+  glVertex3f(width, 0, 0);
+  glVertex3f(0, height, 0);
+
+  glVertex3f(width, 0, 0);
+  glVertex3f(width, height, 0);
+  glVertex3f(0, height, 0);
+
+  // Back face
+  glVertex3f(0, 0, depth);
+  glVertex3f(width, 0, depth);
+  glVertex3f(0, height, depth);
+
+  glVertex3f(width, 0, depth);
+  glVertex3f(width, height, depth);
+  glVertex3f(0, height, depth);
+
+  // Top face
+  glVertex3f(0, height, 0);
+  glVertex3f(width, height, 0);
+  glVertex3f(width, height, depth);
+
+  glVertex3f(width, height, depth);
+  glVertex3f(0, height, depth);
+  glVertex3f(0, height, 0);
+
+  // Bottom face
+  glVertex3f(0, 0, 0);
+  glVertex3f(width, 0, 0);
+  glVertex3f(width, 0, depth);
+
+  glVertex3f(width, 0, depth);
+  glVertex3f(0, 0, depth);
+  glVertex3f(0, 0, 0);
+
+  // Left face
+  glVertex3f(0, 0, 0);
+  glVertex3f(0, height, 0);
+  glVertex3f(0, height, depth);
+
+  glVertex3f(0, height, depth);
+  glVertex3f(0, 0, depth);
+  glVertex3f(0, 0, 0);
+
+  // Right face
+  glVertex3f(width, 0, 0);
+  glVertex3f(width, height, 0);
+  glVertex3f(width, height, depth);
+
+  glVertex3f(width, height, depth);
+  glVertex3f(width, 0, depth);
+  glVertex3f(width, 0, 0);
+
+  glEnd();
+  // Outline
+  glColor3f(0, 0, 0);
+  glLineWidth(5.0);
+
+  // Front face
+  glBegin(GL_LINE_LOOP);
+  glVertex3f(0, 0, 0);
+  glVertex3f(width, 0, 0);
+  glVertex3f(width, height, 0);
+  glVertex3f(0, height, 0);
+  glEnd();
+
+  // Back face
+  glBegin(GL_LINE_LOOP);
+  glVertex3f(0, 0, depth);
+  glVertex3f(width, 0, depth);
+  glVertex3f(width, height, depth);
+  glVertex3f(0, height, depth);
+  glEnd();
+
+  // Remaining Lines
+  glBegin(GL_LINES);
+  glVertex3f(0, 0, 0);
+  glVertex3f(0, 0, depth);
+  glVertex3f(width, 0, 0);
+  glVertex3f(width, 0, depth);
+  glVertex3f(0, height, 0);
+  glVertex3f(0, height, depth);
+  glVertex3f(width, height, 0);
+  glVertex3f(width, height, depth);
+  glEnd();
+}
+
 void RenderSceneGraph() {
   RenderJoint(&(sg.joints[0]));
 }
 
 void RenderJoint(SceneGraph::Joint* j) {
+  float p_x, p_y, p_z, r_x, r_y, r_z;
+  glPushMatrix();
+
   // Draw the line between the previous joint and this one
   glBegin(GL_LINES);
   glColor3f(0.0, 0.0, 0.0);
   glLineWidth(10.0);
   glVertex3f(0.0, 0.0, 0.0);
   glVertex3f(j->offset[0], j->offset[1], j->offset[2]);
-  glEnd();
-  glPushMatrix();
+  glEnd();  // Draw a rectangle
 
-  glTranslatef(j->offset[0], j->offset[1], j->offset[2]);
+  p_x = j->offset[0];
+  p_y = j->offset[1];
+  p_z = j->offset[2];
 
-  float p_x, p_y, p_z, r_x, r_y, r_z;
+  if (j->type != BVH_ROOT) {
+    GLfloat distance = sqrt(p_x * p_x + p_y * p_y + p_z * p_z);
+    glPushMatrix();
+    // Rotate into position
+    DrawRectPrism(1.0, 1.0, distance);
+    glPopMatrix();
+  }
+
+  glTranslatef(p_x, p_y, p_z);
+
   for (int i = 0; i < j->numchans; i++) {
     switch (j->order[i]) {
       case BVH_XPOS_IDX :
@@ -421,8 +525,6 @@ int main(int argc, char *argv[]) {
   startTimer = 0;
   zoom = 1;
   orbit = 0;
-  height = 0;
-  pan = 0;
   // Initialize GLUT
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
