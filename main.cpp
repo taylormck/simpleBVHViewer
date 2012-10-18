@@ -440,7 +440,7 @@ void DrawRectPrism(GLfloat width, GLfloat height, GLfloat depth) {
 }
 
 void RenderSceneGraph() {
-  RenderJoint(&(sg.joints[0]), 2.0);
+  RenderJoint(&(sg.joints[0]), 1.5);
 }
 
 // Still draws points at the joints and lines between them
@@ -462,25 +462,25 @@ void RenderJoint(SceneGraph::Joint* j, GLfloat scale) {
   p_z = j->offset[2];
 
   if (j->type != BVH_ROOT) {
-    GLfloat distance = sqrt(p_x * p_x + p_y * p_y + p_z * p_z);
-    glPushMatrix();
     // Rotate into position
     Vec3f offset = Vec3f::makeVec(p_x, p_y, p_z);
+    Vec3f unitz = Vec3f::makeVec(0.0f, 0.0f, 1.0f);
     offset = offset.unit();  // Make magnitude 1
 
-    Vec3f standard;
-    if (r_z == 1.0) {
-      standard = Vec3f::makeVec(1.0f, 0.0f, 0.0f);
-    } else {
-      standard = Vec3f::makeVec(0.0f, 0.0f, 1.0f);
-    }
+    GLfloat distance = sqrt(p_x * p_x + p_y * p_y + p_z * p_z);
 
-    Vec3f rotate = standard ^ offset;  // Axis of rotation
-    GLfloat angle = acos(standard * offset) * 180 / PI;  // Angle of rotation
+    if (!(offset == unitz)) {
+    glPushMatrix();
+
+    Vec3f rotate = unitz ^ offset;  // Axis of rotation
+    GLfloat angle = acos(unitz * offset) * 180 / PI;  // Angle of rotation
 
     glRotatef(angle, rotate.x[0], rotate.x[1], rotate.x[2]);
     DrawRectPrism(scale, scale, distance);
     glPopMatrix();
+    } else {  // Offset is already on Z axis, so don't rotate
+      DrawRectPrism(scale * distance, scale * distance, distance);
+    }
   }
 
   glTranslatef(p_x, p_y, p_z);
@@ -518,7 +518,7 @@ void RenderJoint(SceneGraph::Joint* j, GLfloat scale) {
 
   // Draw the children
   for (uint32_t i = 0; i < j->children.size(); i++) {
-    RenderJoint(&(sg.joints[j->children[i]]), scale * 0.9);
+    RenderJoint(&(sg.joints[j->children[i]]), scale);
   }
 
   // Draw outlined dot
