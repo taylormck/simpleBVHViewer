@@ -455,7 +455,9 @@ void RenderJoint(SceneGraph::Joint* j, GLfloat scale) {
   glLineWidth(10.0);
   glVertex3f(0.0, 0.0, 0.0);
   glVertex3f(j->offset[0], j->offset[1], j->offset[2]);
-  glEnd();  // Draw a rectangle
+  glEnd();
+
+  // Draw a rectangle
 
   p_x = j->offset[0];
   p_y = j->offset[1];
@@ -479,7 +481,7 @@ void RenderJoint(SceneGraph::Joint* j, GLfloat scale) {
     DrawRectPrism(scale, scale, distance);
     glPopMatrix();
     } else {  // Offset is already on Z axis, so don't rotate
-      DrawRectPrism(scale * distance, scale * distance, distance);
+      DrawRectPrism(scale, scale, distance);
     }
   }
 
